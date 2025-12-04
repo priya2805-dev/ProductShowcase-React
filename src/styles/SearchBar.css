@@ -1,0 +1,15 @@
+/* ===== Search Bar ===== */
+.search-container {
+  display: flex;
+  justify-content: center; /* center horizontally */
+  width: 100%; /* full width */
+  margin: 15px 0;
+}
+
+.search-container input {
+  width: 100%;
+  max-width: 400px; /* limit the width */
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}

@@ -1,11 +1,18 @@
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ProductPage from "./pages/ProductPage";
+import ProductFormPage from "./components/ProductForm";
 import { ViewProvider } from "./context/ViewContext";
-import ProductPage from './pages/ProductPage';
 
 function App() {
   return (
-       <ViewProvider>
-    <ProductPage/>
+    <ViewProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<ProductPage />} />
+          <Route path="/product-form" element={<ProductFormPage />} />
+        </Routes>
+      </Router>
     </ViewProvider>
   );
 }

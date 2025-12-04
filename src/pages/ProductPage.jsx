@@ -1,15 +1,19 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import productData from "../data/data.json";
-import ViewToggle from "../components/ViewToggle";
 import { ViewContext } from "../context/ViewContext";
+import ViewToggle from "../components/ViewToggle";
+import PaginationPage from "../components/Pagination";
 import "../styles/ProductPage.css";
 
 const ProductPage = () => {
-  const [product, setProduct] = useState([]);
+  const { view } = useContext(ViewContext);
+
+  const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
+    id: null,
     name: "",
     price: "",
     category: "",
@@ -18,187 +22,157 @@ const ProductPage = () => {
   });
   const [errors, setErrors] = useState({});
   const [editingId, setEditingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
-  const { view } = useContext(ViewContext);
-
-  // Load products
+  // Load product list
   useEffect(() => {
-    setProduct(productData);
+    setProducts(productData);
     setFilteredProducts(productData);
   }, []);
 
-  // Debounce search
+  // Debounced search
   useEffect(() => {
     const handler = setTimeout(() => {
       if (searchTerm) {
-        const filtered = product.filter((p) =>
+        const flt = products.filter((p) =>
           p.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
-        setFilteredProducts(filtered);
+        setFilteredProducts(flt);
+        setCurrentPage(1);
       } else {
-        setFilteredProducts(product);
+        setFilteredProducts(products);
       }
     }, 500);
 
     return () => clearTimeout(handler);
-  }, [searchTerm, product]);
+  }, [searchTerm, products]);
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
 
   // Form submit
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Name is required";
-    if (!formData.price) newErrors.price = "Price is required";
-    if (!formData.category.trim()) newErrors.category = "Category is required";
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    const errs = {};
+    if (!formData.name.trim()) errs.name = "Name is required";
+    if (!formData.price) errs.price = "Price is required";
+    if (!formData.category.trim()) errs.category = "Category is required";
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
 
     if (editingId) {
-      const updatedProducts = product.map((p) =>
+      const updated = products.map((p) =>
         p.id === editingId ? { ...p, ...formData } : p
       );
-      setProduct(updatedProducts);
-      setFilteredProducts(updatedProducts);
+      setProducts(updated);
+      setFilteredProducts(updated);
       setEditingId(null);
     } else {
-      const newProduct = { id: product.length + 1, ...formData };
-      const updatedProducts = [...product, newProduct];
-      setProduct(updatedProducts);
-      setFilteredProducts(updatedProducts);
+      const newProduct = { id: products.length + 1, ...formData };
+      const updated = [...products, newProduct];
+      setProducts(updated);
+      setFilteredProducts(updated);
     }
 
-    setFormData({
-      name: "",
-      price: "",
-      category: "",
-      stock: "",
-      description: "",
-    });
+    setFormData({ id: null, name: "", price: "", category: "", stock: "", description: "" });
     setErrors({});
     setShowForm(false);
   };
 
   const handleEdit = (id) => {
-    const productToEdit = product.find((p) => p.id === id);
-    setFormData({ ...productToEdit });
+    const product = products.find((p) => p.id === id);
+    setFormData({ ...product });
     setEditingId(id);
     setShowForm(true);
   };
 
   return (
     <div className="product-page">
-      <h2 className="page-title">Product Management</h2>
-      <h4 className="product-count">
-        Total Products: {filteredProducts.length}
-      </h4>
 
-      <ViewToggle />
+      {/* Header */}
+      <div className="header-row">
+        <h2 className="page-title">Product Management</h2>
+        <div className="header-right">
+          <ViewToggle />
+          <button className="add-btn" onClick={() => setShowForm(true)}>
+            Add Product
+          </button>
+        </div>
+      </div>
 
       {/* Search */}
       <div className="search-container">
         <input
           type="text"
-          placeholder="Search by product name..."
+          placeholder="Search products..."
+          className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="search-input"
         />
       </div>
-
-      {/* Add Product Button */}
-      {!showForm && (
-        <div className="add-button-container">
-          <button className="add-button" onClick={() => setShowForm(true)}>
-            Add Product
-          </button>
-        </div>
-      )}
 
       {/* Product Form */}
       {showForm && (
         <div className="product-form">
-          <h3 className="form-title">
-            {editingId ? "Edit Product" : "Add Product"}
-          </h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-row">
-              <label>Name*</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-              {errors.name && <span className="error">{errors.name}</span>}
-            </div>
+          <h3 className="form-title">{editingId ? "Edit Product" : "Add Product"}</h3>
+          <form className="form-box" onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Product Name"
+              className="form-input"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            />
+            {errors.name && <span className="error">{errors.name}</span>}
 
-            <div className="form-row">
-              <label>Price*</label>
-              <input
-                type="number"
-                value={formData.price}
-                onChange={(e) =>
-                  setFormData({ ...formData, price: e.target.value })
-                }
-              />
-              {errors.price && <span className="error">{errors.price}</span>}
-            </div>
+            <input
+              type="number"
+              placeholder="Price"
+              className="form-input"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            />
+            {errors.price && <span className="error">{errors.price}</span>}
 
-            <div className="form-row">
-              <label>Category*</label>
-              <input
-                type="text"
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-              />
-              {errors.category && (
-                <span className="error">{errors.category}</span>
-              )}
-            </div>
+            <input
+              type="text"
+              placeholder="Category"
+              className="form-input"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            />
+            {errors.category && <span className="error">{errors.category}</span>}
 
-            <div className="form-row">
-              <label>Stock</label>
-              <input
-                type="number"
-                value={formData.stock}
-                onChange={(e) =>
-                  setFormData({ ...formData, stock: e.target.value })
-                }
-              />
-            </div>
+            <input
+              type="number"
+              placeholder="Stock"
+              className="form-input"
+              value={formData.stock}
+              onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+            />
 
-            <div className="form-row">
-              <label>Description</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-              />
-            </div>
+            <textarea
+              placeholder="Description"
+              className="form-textarea"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
 
-            <div className="button-group">
+            <div className="form-buttons">
               <button type="submit" className="submit-btn">
-                {editingId ? "Update" : "Add"} Product
+                {editingId ? "Update" : "Add"}
               </button>
               <button
                 type="button"
                 className="cancel-btn"
                 onClick={() => {
                   setShowForm(false);
-                  setFormData({
-                    name: "",
-                    price: "",
-                    category: "",
-                    stock: "",
-                    description: "",
-                  });
-                  setErrors({});
+                  setFormData({ id: null, name: "", price: "", category: "", stock: "", description: "" });
                   setEditingId(null);
+                  setErrors({});
                 }}
               >
                 Cancel
@@ -208,13 +182,13 @@ const ProductPage = () => {
         </div>
       )}
 
-      {/* Products Table or Grid */}
+      {/* Table / Grid View */}
       {view === "table" ? (
-        <div className="table-container">
-          <table>
+        <div className="table-wrapper">
+          <table className="table-view">
             <thead>
               <tr>
-                 <th>ID</th>
+                <th>ID</th>
                 <th>Name</th>
                 <th>Price</th>
                 <th>Category</th>
@@ -224,7 +198,7 @@ const ProductPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map((p) => (
+              {currentItems.map((p) => (
                 <tr key={p.id}>
                   <td>{p.id}</td>
                   <td>{p.name}</td>
@@ -233,12 +207,7 @@ const ProductPage = () => {
                   <td>{p.stock}</td>
                   <td>{p.description}</td>
                   <td>
-                    <button
-                      className="edit-btn"
-                      onClick={() => handleEdit(p.id)}
-                    >
-                      Edit
-                    </button>
+                    <button className="edit-btn" onClick={() => handleEdit(p.id)}>Edit</button>
                   </td>
                 </tr>
               ))}
@@ -247,33 +216,26 @@ const ProductPage = () => {
         </div>
       ) : (
         <div className="grid-container">
-          {filteredProducts.map((p) => (
-            <div key={p.id} className="grid-item">
-              <p>
-                <strong>ID:</strong> {p.id}
-              </p>
-               <p>
-                <strong>Name:</strong> {p.name}
-              </p>
-              <p>
-                <strong>Price:</strong> ₹{p.price}
-              </p>
-              <p>
-                <strong>Category:</strong> {p.category}
-              </p>
-              <p>
-                <strong>Stock:</strong> {p.stock}
-              </p>
-              <p>
-                <strong>Description:</strong> {p.description}
-              </p>
-              <button className="edit-btn" onClick={() => handleEdit(p.id)}>
-                Edit
-              </button>
+          {currentItems.map((p) => (
+            <div className="grid-card" key={p.id}>
+              <h3>{p.name}</h3>
+              <p>₹{p.price}</p>
+              <p>{p.category}</p>
+              <p>Stock: {p.stock}</p>
+              <p>{p.description}</p>
+              <button className="edit-btn" onClick={() => handleEdit(p.id)}>Edit</button>
             </div>
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      <PaginationPage
+        totalItems={filteredProducts.length}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
     </div>
   );
 };
