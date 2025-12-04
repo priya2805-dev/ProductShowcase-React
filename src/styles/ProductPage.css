@@ -33,11 +33,11 @@
 /* ================= BUTTONS ================= */
 .add-btn {
   height: 50px;
-   padding: 0.5rem 1rem; 
+  padding: 0.5rem 1rem; 
   background-color: #28a745;
   color: #fff;
   border: none;
-   border-radius: 6px;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -76,7 +76,7 @@
 
 /* ================= PRODUCT FORM ================= */
 .product-form {
-  background: #fff;
+  background: #ffffff;
   padding: 1.5rem;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -151,9 +151,9 @@
 /* ================= TABLE VIEW ================= */
 .table-wrapper {
   width: 100%;
-  overflow-x: auto; /* horizontal scroll on small screens */
+  overflow-x: auto;
   margin-bottom: 1.5rem;
-  background: #fff;
+  background: #ffffff; /* table background */
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   padding: 0.5rem;
@@ -180,45 +180,31 @@
 }
 
 /* ================= GRID VIEW ================= */
-/* Grid Container */
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 1rem;
-  margin: 0 auto 1.5rem; /* centers container */
-  justify-content: center; /* centers the grid items horizontally */
-  max-width: 1200px; /* optional: limits max width */
+  margin: 0 auto 1.5rem;
+  justify-content: center;
+  max-width: 1200px;
 }
 
-/* Grid Card */
 .grid-card {
-  background: #fff;
+  background: #b8bdca;
   padding: 1rem;
   border-radius: 10px;
+  border: 1px solid #007bff; 
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   word-break: break-word;
+  transition: all 0.3s ease;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .grid-container {
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .grid-container {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-}
-
-@media (max-width: 480px) {
-  .grid-container {
-    grid-template-columns: 1fr; /* single column on mobile */
-  }
+.grid-card:hover {
+  border-color: #0056b3;
+  box-shadow: 0 6px 14px rgba(0,86,179,0.2);
 }
 
 .grid-card h3 {
@@ -317,7 +303,7 @@
 
 @media (max-width: 480px) {
   .grid-container {
-    grid-template-columns: 1fr; /* single column on very small screens */
+    grid-template-columns: 1fr;
   }
 
   .table-view th, .table-view td {
